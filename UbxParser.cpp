@@ -1,6 +1,6 @@
-#include "UBX_Parser.h"
+#include "UbxParser.h"
 
-UBX_Parser::UBX_Parser()
+UbxParser::UbxParser()
 {
     state_ = GOT_NONE;
     msgclass_ = -1;
@@ -11,7 +11,7 @@ UBX_Parser::UBX_Parser()
     count_ = 0;
 }
 
-bool UBX_Parser::Read(Stream *port)
+bool UbxParser::Read(Stream *port)
 {
     while (port->available())
     {
@@ -24,7 +24,7 @@ bool UBX_Parser::Read(Stream *port)
 }
 
 
-bool UBX_Parser::Parse(int b)
+bool UbxParser::Parse(int b)
 {
     // debug_port.print(b, HEX);
     // debug_port.print(",");
@@ -122,44 +122,44 @@ bool UBX_Parser::Parse(int b)
     return false;
 }
 
-void UBX_Parser::AddToChecksum(int b)
+void UbxParser::AddToChecksum(int b)
 {
     chka_ = (chka_ + b) & 0xFF;
     chkb_ = (chkb_ + chka_) & 0xFF;
 }
 
-uint32_t UBX_Parser::UnpackUint32(int offset)
+uint32_t UbxParser::UnpackUint32(int offset)
 {
     return (uint32_t)Unpack(offset, 4);
 }
 
-int32_t UBX_Parser::UnpackInt32(int offset)
+int32_t UbxParser::UnpackInt32(int offset)
 {
 
     return Unpack(offset, 4);
 }
 
-uint16_t UBX_Parser::UnpackUint16(int offset)
+uint16_t UbxParser::UnpackUint16(int offset)
 {
     return (uint16_t)Unpack(offset, 2);
 }
 
-int16_t UBX_Parser::UnpackInt16(int offset)
+int16_t UbxParser::UnpackInt16(int offset)
 {
     return (int16_t)Unpack(offset, 2);
 }
 
-uint8_t UBX_Parser::UnpackUint8(int offset)
+uint8_t UbxParser::UnpackUint8(int offset)
 {
     return (uint8_t)Unpack(offset, 1);
 }
 
-int8_t UBX_Parser::UnpackInt8(int offset)
+int8_t UbxParser::UnpackInt8(int offset)
 {
     return (int8_t)Unpack(offset, 1);
 }
 
-long UBX_Parser::Unpack(int offset, int size)
+long UbxParser::Unpack(int offset, int size)
 {
     long value = 0; // four bytes on most Arduinos
 

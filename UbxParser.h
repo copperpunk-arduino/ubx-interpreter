@@ -1,11 +1,11 @@
 /**
   *
-  * UBX_Parser.h - A C++ class for parsing UBX messages from Ublox GPS
+  * UbxParser.h - A C++ class for parsing UBX messages from Ublox GPS
   * 
-  * Based on the UBX_Parser library written by Simon D. Levy
+  * Based on the UbxParser library written by Simon D. Levy
   * 
   * 
-  * Copyright (C) 2015 Simon D. Levy
+  * Copyright (C) 2021 Copperpunk
   *
   * This code is free software: you can redistribute it and/or modify
   * it under the terms of the GNU Lesser General Public License as
@@ -24,8 +24,8 @@
 /**
 	* A class for parsing UBX messages.
 	*/
-#ifndef _UBX_PARSER_H_
-#define _UBX_PARSER_H_
+#ifndef _UBXPARSER_H_
+#define _UBXPARSER_H_
 
 #include "Arduino.h"
 
@@ -36,11 +36,11 @@
 
 
 // #define debug_port Serial
-class UBX_Parser
+class UbxParser
 {
 
 public:
-	UBX_Parser();
+	UbxParser();
 	bool Read(Stream *port);
 
 protected:	
