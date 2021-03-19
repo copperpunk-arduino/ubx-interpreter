@@ -2,7 +2,7 @@
   *
   * UbxParser.h - A C++ class for parsing UBX messages from Ublox GPS
   * 
-  * Based on the UbxParser library written by Simon D. Levy
+  * Based on the UBX_Parser library written by Simon D. Levy
   * 
   * 
   * Copyright (C) 2021 Copperpunk
@@ -29,28 +29,31 @@
 
 #include "Arduino.h"
 
-#define kBufferSize 100
-#define kPayloadSize 100
-#define RAD2DEG 57.2957795130
-#define DEG2RAD 0.0174532925
+#define START_BYTE_1 0xB5
+#define START_BYTE_2 0x62
 
-
-// #define debug_port Serial
+const int kBufferSize = 100;
+const int kPayloadSize = 100;
+const int kMessageLengthMax = kPayloadSize-7;
 class UbxParser
 {
-
 public:
 	UbxParser();
 	bool Read(Stream *port);
+	int BuildMessage(int msg_class, int msg_id, int payload_length, uint8_t payload[], uint8_t msg_buffer[]);
+	void CalculateChecksum(uint8_t payload[], int payload_length, uint8_t &chka, uint8_t &chkb);
+	static void PrintBuffer(uint8_t msg_buffer[], int msg_length, Stream *port, int output_type=DEC);
+	uint8_t MsgClass();
+	uint8_t MsgId();
 
 protected:	
-	unsigned char read_buffer_[kBufferSize];
+	uint8_t read_buffer_[kBufferSize];
 
 	typedef enum
 	{
 		GOT_NONE,
-		GOT_SYNC1,
-		GOT_SYNC2,
+		GOT_START_BYTE1,
+		GOT_START_BYTE2,
 		GOT_CLASS,
 		GOT_ID,
 		GOT_LENGTH1,
@@ -60,15 +63,15 @@ protected:
 	} state_t;
 
 	state_t state_;
-	int msgclass_;
-	int msgid_;
+	uint8_t msgclass_;
+	uint8_t msgid_;
 	int msglen_;
-	unsigned char chka_;
-	unsigned char chkb_;
+	uint8_t chka_;
+	uint8_t chkb_;
 	int count_;
-	unsigned char payload_[kPayloadSize];
+	uint8_t payload_[kPayloadSize];
 
-	bool Parse(int b);
+	bool Parse(uint8_t b);
 	void AddToChecksum(int b);
 	uint32_t UnpackUint32(int offset);
 	int32_t UnpackInt32(int offset);
@@ -76,6 +79,6 @@ protected:
 	int16_t UnpackInt16(int offset);
 	uint8_t UnpackUint8(int offset);
 	int8_t UnpackInt8(int offset);
-	long Unpack(int offset, int size);
+	int32_t Unpack(int offset, int size);
 };
 #endif
