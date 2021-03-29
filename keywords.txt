@@ -1,4 +1,7 @@
 UbxParser   KEYWORD1
-Read    KEYWORD2
-BuildMessage    KEYWORD2
-CalculateChecksum   KEYWORD2
+read        KEYWORD2
+buildMessage        KEYWORD2
+calculateChecksum   KEYWORD2
+printBuffer     KEYWORD2
+msgClass        KEYWORD2
+msgId       KEYWORD2

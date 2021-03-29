@@ -40,12 +40,12 @@ class UbxParser
 {
 public:
 	UbxParser();
-	bool Read(Stream *port);
-	int BuildMessage(int msg_class, int msg_id, int payload_length, uint8_t payload[], uint8_t msg_buffer[]);
-	void CalculateChecksum(uint8_t payload[], int payload_length, uint8_t &chka, uint8_t &chkb);
-	static void PrintBuffer(uint8_t msg_buffer[], int msg_length, Stream *port, int output_type=DEC);
-	uint8_t MsgClass();
-	uint8_t MsgId();
+	bool read(Stream *port);
+	int buildMessage(int msg_class, int msg_id, int payload_length, uint8_t payload[], uint8_t msg_buffer[]);
+	void calculateChecksum(uint8_t payload[], int payload_length, uint8_t &chka, uint8_t &chkb);
+	static void printBuffer(uint8_t msg_buffer[], int msg_length, Stream *port, int output_type=DEC);
+	uint8_t msgClass();
+	uint8_t msgId();
 
 protected:	
 	uint8_t read_buffer_[kBufferSize];
@@ -72,14 +72,14 @@ protected:
 	int count_;
 	uint8_t payload_[kPayloadSize];
 
-	bool Parse(uint8_t b);
-	void AddToChecksum(int b);
-	uint32_t UnpackUint32(int offset);
-	int32_t UnpackInt32(int offset);
-	uint16_t UnpackUint16(int offset);
-	int16_t UnpackInt16(int offset);
-	uint8_t UnpackUint8(int offset);
-	int8_t UnpackInt8(int offset);
-	int32_t Unpack(int offset, int size);
+	bool parse(uint8_t b);
+	void addToChecksum(int b);
+	uint32_t unpackUint32(int offset);
+	int32_t unpackInt32(int offset);
+	uint16_t unpackUint16(int offset);
+	int16_t unpackInt16(int offset);
+	uint8_t unpackUint8(int offset);
+	int8_t unpackInt8(int offset);
+	int32_t unpack(int offset, int size);
 };
 #endif
