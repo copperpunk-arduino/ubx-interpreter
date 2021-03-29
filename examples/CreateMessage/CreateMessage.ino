@@ -1,16 +1,13 @@
 #include "UbxParser.h"
 
 #define debug_port Serial
-#define DEBUG
 
 UbxParser ubx_;
 
 void setup()
 {
   debug_port.begin(115200);
-  #ifdef DEBUG
   while(!debug_port){}
-  #endif
 
   uint8_t msg_class = 100;
   uint8_t msg_id = 101;
