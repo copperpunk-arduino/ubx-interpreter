@@ -3,6 +3,7 @@
   * UbxParser.h - A C++ class for parsing UBX messages from Ublox GPS
   * 
   * Based on the UBX_Parser library written by Simon D. Levy
+  * https://github.com/simondlevy/UBX_Parser
   * 
   * 
   * Copyright (C) 2021 Copperpunk

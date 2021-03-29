@@ -25,9 +25,6 @@ bool UbxParser::Read(Stream *port)
 
 bool UbxParser::Parse(uint8_t b)
 {
-    // VerbosePrint(b, HEX);
-    // VerbosePrint(",");
-    // VerbosePrintln(state_);
     switch (state_)
     {
     case GOT_NONE:
