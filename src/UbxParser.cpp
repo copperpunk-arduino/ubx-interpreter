@@ -11,18 +11,6 @@ UbxParser::UbxParser()
     count_ = 0;
 }
 
-bool UbxParser::read(Stream *port)
-{
-    while (port->available())
-    {
-        if (parse(port->read()))
-        {
-            return true;
-        }
-    }
-    return false;
-}
-
 bool UbxParser::parse(uint8_t b)
 {
     switch (state_)
@@ -164,7 +152,7 @@ int8_t UbxParser::unpackInt8(int offset)
 
 int32_t UbxParser::unpack(int offset, int size)
 {
-    long value = 0; // four bytes on most Arduinos
+    int32_t value = 0;
 
     for (int k = 0; k < size; ++k)
     {
@@ -184,7 +172,7 @@ int UbxParser::buildMessage(int msg_class, int msg_id, int payload_length, uint8
     msg_buffer[index++] = msg_id;
     msg_buffer[index++] = payload_length & 0xFF;
     msg_buffer[index++] = (payload_length >> 8) & 0xFF;
-    memcpy(&msg_buffer[index], &payload[0], payload_length);
+    std::memcpy(&msg_buffer[index], &payload[0], payload_length);
     index += payload_length;
     uint8_t chka, chkb;
     calculateChecksum(&msg_buffer[2], payload_length+4, chka, chkb);
@@ -203,17 +191,6 @@ void UbxParser::calculateChecksum(uint8_t *payload, int payload_length, uint8_t 
         chka = (chka + payload[i]) & 0xFF;
         chkb = (chkb + chka) & 0xFF;
     }
-}
-
-void UbxParser::printBuffer(uint8_t msg_buffer[], int msg_length, Stream *port, int output_type)
-{
-    int i = 0;
-    for (; i < msg_length-1; i++)
-    {
-        port->print(msg_buffer[i], output_type);
-        port->print(F(","));
-    }
-    port->println(msg_buffer[i]);
 }
 
 uint8_t UbxParser::msgClass()

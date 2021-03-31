@@ -22,13 +22,11 @@
   * along with this code.  If not, see <http://www.gnu.org/licenses/>.
   */
 
-/**
-	* A class for parsing UBX messages.
-	*/
 #ifndef _UBXPARSER_H_
 #define _UBXPARSER_H_
 
-#include "Arduino.h"
+#include <stdint.h>
+#include <cstring>
 
 #define START_BYTE_1 0xB5
 #define START_BYTE_2 0x62
@@ -40,11 +38,9 @@ class UbxParser
 {
 public:
 	UbxParser();
-	bool read(Stream *port);
 	bool parse(uint8_t b);
 	int buildMessage(int msg_class, int msg_id, int payload_length, uint8_t payload[], uint8_t msg_buffer[]);
 	void calculateChecksum(uint8_t payload[], int payload_length, uint8_t &chka, uint8_t &chkb);
-	static void printBuffer(uint8_t msg_buffer[], int msg_length, Stream *port, int output_type = DEC);
 	uint8_t msgClass();
 	uint8_t msgId();
 

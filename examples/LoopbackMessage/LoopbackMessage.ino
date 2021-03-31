@@ -24,11 +24,15 @@ void sendMessage(byte msg_class, byte msg_id)
 void setup()
 {
   debug_port.begin(115200);
-  while (!debug_port) {}
+  while (!debug_port)
+  {
+  }
   data_port.begin(115200);
-  while(!data_port);
+  while (!data_port)
+    ;
   // Clear data_port buffer
-  while(data_port.available()) {
+  while (data_port.available())
+  {
     data_port.read();
   }
 }
@@ -37,14 +41,18 @@ void loop()
 {
   sendMessage(msg_class_, msg_id_);
   delay(10);
-  if(ubx_.read(&data_port)) {
-    debug_port.print("Message rx'd with class ");
-    debug_port.print(ubx_.msgClass());
-    debug_port.print(F(" and ID "));
-    debug_port.print(ubx_.msgId());
-    debug_port.print(F("\n\n"));
+  while(data_port.available())
+  {
+    if(ubx_.parse(data_port.read())) {
+      debug_port.print("Message rx'd with class ");
+      debug_port.print(ubx_.msgClass());
+      debug_port.print(F(" and ID "));
+      debug_port.print(ubx_.msgId());
+      debug_port.print(F("\n\n"));
+    }
   }
+
   msg_class_++;
-  msg_id_+=2;
+  msg_id_ += 2;
   delay(1000);
 }
