@@ -34,12 +34,27 @@
 const int kBufferSize = 100;
 const int kPayloadSize = 100;
 const int kMessageLengthMax = kPayloadSize - 7;
+
 class UbxParser
 {
 public:
+	enum ParseState
+	{
+		GOT_NONE=0,
+		GOT_START_BYTE1,
+		GOT_START_BYTE2,
+		GOT_CLASS,
+		GOT_ID,
+		GOT_LENGTH1,
+		GOT_LENGTH2,
+		GOT_PAYLOAD,
+		GOT_CHKA,
+		GOT_MESSAGE
+	};
+
 	UbxParser();
 	bool read(Stream *port);
-	bool parse(uint8_t next_byte);
+	ParseState parse(uint8_t next_byte);
 	int buildMessage(int msg_class, int msg_id, int payload_length, uint8_t payload[], uint8_t msg_buffer[]);
 	void calculateChecksum(uint8_t payload[], int payload_length, uint8_t &chka, uint8_t &chkb);
 	static void printBuffer(uint8_t msg_buffer[], int msg_length, Stream *port, int output_type = DEC);
@@ -57,20 +72,8 @@ protected:
 
 private:
 	uint8_t read_buffer_[kBufferSize];
-	typedef enum
-	{
-		GOT_NONE,
-		GOT_START_BYTE1,
-		GOT_START_BYTE2,
-		GOT_CLASS,
-		GOT_ID,
-		GOT_LENGTH1,
-		GOT_LENGTH2,
-		GOT_PAYLOAD,
-		GOT_CHKA
-	} state_t;
 
-	state_t state_;
+	ParseState state_;
 	uint8_t msgclass_;
 	uint8_t msgid_;
 	int msglen_;

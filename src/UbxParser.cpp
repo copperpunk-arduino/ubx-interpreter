@@ -1,20 +1,4 @@
-/**
- * @file UbxParser.cpp
- */
 #include "UbxParser.h"
-
-#ifdef DEBUG
-#define DebugPrint(x) port.print(x)
-#define DebugPrintln(x) port.println(x)
-#else
-#define DebugPrint(x) 
-#define DebugPrintln(x) 
-#endif
-
-/**
- * This is the default constructor.
- * It constructs things.
- */
 
 UbxParser::UbxParser()
 {
@@ -31,7 +15,7 @@ bool UbxParser::read(Stream *port)
 {
     while (port->available())
     {
-        if (parse(port->read()))
+        if (parse(port->read()) == GOT_MESSAGE)
         {
             return true;
         }
@@ -39,12 +23,7 @@ bool UbxParser::read(Stream *port)
     return false;
 }
 
-/**
- * Process the next byte
- * @param[in] parse_byte next byte in the buffer to parse
- * @param[out] result: true if valid message received
- */
-bool UbxParser::parse(uint8_t parse_byte)
+UbxParser::ParseState UbxParser::parse(uint8_t parse_byte)
 {
     switch (state_)
     {
@@ -63,7 +42,7 @@ bool UbxParser::parse(uint8_t parse_byte)
         }
         else
         {
-            DebugPrintln("bad b2");
+            // DebugPrintln("bad b2");
             state_ = GOT_NONE;
         }
         break;
@@ -93,7 +72,7 @@ bool UbxParser::parse(uint8_t parse_byte)
         else
         {
             state_ = GOT_NONE;
-            DebugPrintln("Msg length too big");
+            // DebugPrintln("Msg length too big");
         }
         break;
     case GOT_LENGTH2:
@@ -110,7 +89,7 @@ bool UbxParser::parse(uint8_t parse_byte)
         }
         else
         {
-            DebugPrintln("overrun");
+            // DebugPrintln("overrun");
             state_ = GOT_NONE;
         }
         break;
@@ -118,7 +97,7 @@ bool UbxParser::parse(uint8_t parse_byte)
         if (parse_byte == chka_)
         {
             state_ = GOT_CHKA;
-            DebugPrintln("good chka");
+            // DebugPrintln("good chka");
         }
         else
         {
@@ -130,19 +109,19 @@ bool UbxParser::parse(uint8_t parse_byte)
         state_ = GOT_NONE;
         if (parse_byte == chkb_)
         {
-            DebugPrintln("good msg");
-            return true;
+            // DebugPrintln("good msg");
+            return GOT_MESSAGE;
         }
-        else
-        {
-            DebugPrintln("bad chkb. exp/rx: " + String(chkb_) + "/" + String(parse_byte));
-        }
+        // else
+        // {
+        //     DebugPrintln("bad chkb. exp/rx: " + String(chkb_) + "/" + String(parse_byte));
+        // }
         break;
     default:
-        DebugPrintln("unk :" + String(parse_byte) + "/" + String(state));
+        // DebugPrintln("unk :" + String(parse_byte) + "/" + String(state));
         break;
     }
-    return false;
+    return state_;
 }
 
 void UbxParser::addToChecksum(int b)
