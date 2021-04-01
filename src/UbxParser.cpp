@@ -1,4 +1,20 @@
+/**
+ * @file UbxParser.cpp
+ */
 #include "UbxParser.h"
+
+#ifdef DEBUG
+#define DebugPrint(x) port.print(x)
+#define DebugPrintln(x) port.println(x)
+#else
+#define DebugPrint(x) 
+#define DebugPrintln(x) 
+#endif
+
+/**
+ * This is the default constructor.
+ * It constructs things.
+ */
 
 UbxParser::UbxParser()
 {
@@ -11,18 +27,35 @@ UbxParser::UbxParser()
     count_ = 0;
 }
 
-bool UbxParser::parse(uint8_t b)
+bool UbxParser::read(Stream *port)
+{
+    while (port->available())
+    {
+        if (parse(port->read()))
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
+ * Process the next byte
+ * @param[in] parse_byte next byte in the buffer to parse
+ * @param[out] result: true if valid message received
+ */
+bool UbxParser::parse(uint8_t parse_byte)
 {
     switch (state_)
     {
     case GOT_NONE:
-        if (b == START_BYTE_1)
+        if (parse_byte == START_BYTE_1)
         {
             state_ = GOT_START_BYTE1;
         }
         break;
     case GOT_START_BYTE1:
-        if (b == START_BYTE_2)
+        if (parse_byte == START_BYTE_2)
         {
             state_ = GOT_START_BYTE2;
             chka_ = 0;
@@ -30,44 +63,44 @@ bool UbxParser::parse(uint8_t b)
         }
         else
         {
-            // DebugPrintln("bad b2");
+            DebugPrintln("bad b2");
             state_ = GOT_NONE;
         }
         break;
     case GOT_START_BYTE2:
-        msgclass_ = b;
+        msgclass_ = parse_byte;
         state_ = GOT_CLASS;
-        addToChecksum(b);
+        addToChecksum(parse_byte);
         break;
     case GOT_CLASS:
-        msgid_ = b;
+        msgid_ = parse_byte;
         state_ = GOT_ID;
-        addToChecksum(b);
+        addToChecksum(parse_byte);
         break;
     case GOT_ID:
         state_ = GOT_LENGTH1;
-        msglen_ = b;
-        addToChecksum(b);
+        msglen_ = parse_byte;
+        addToChecksum(parse_byte);
         break;
     case GOT_LENGTH1:
-        msglen_ += (b << 8);
+        msglen_ += (parse_byte << 8);
         if (msglen_ < kMessageLengthMax)
         {
             state_ = GOT_LENGTH2;
             count_ = 0;
-            addToChecksum(b);
+            addToChecksum(parse_byte);
         }
         else
         {
             state_ = GOT_NONE;
-            // DebugPrintln("Msg length too big");
+            DebugPrintln("Msg length too big");
         }
         break;
     case GOT_LENGTH2:
         if (count_ < kPayloadSize)
         {
-            addToChecksum(b);
-            payload_[count_] = b;
+            addToChecksum(parse_byte);
+            payload_[count_] = parse_byte;
             count_++;
 
             if (count_ == msglen_)
@@ -77,37 +110,36 @@ bool UbxParser::parse(uint8_t b)
         }
         else
         {
-            // DebugPrintln("overrun");
+            DebugPrintln("overrun");
             state_ = GOT_NONE;
         }
         break;
     case GOT_PAYLOAD:
-        if (b == chka_)
+        if (parse_byte == chka_)
         {
             state_ = GOT_CHKA;
-            // DebugPrintln("good chka");
+            DebugPrintln("good chka");
         }
         else
         {
         state_:
             GOT_NONE;
-            // DebugPrintln("bad chka. exp/rx: " + String(chka_) + "/" + String(b));
         }
         break;
     case GOT_CHKA:
         state_ = GOT_NONE;
-        if (b == chkb_)
+        if (parse_byte == chkb_)
         {
-            // DebugPrintln("good msg");
+            DebugPrintln("good msg");
             return true;
         }
         else
         {
-            // DebugPrintln("bad chkb. exp/rx: " + String(chkb_) + "/" + String(b));
+            DebugPrintln("bad chkb. exp/rx: " + String(chkb_) + "/" + String(parse_byte));
         }
         break;
     default:
-        // DebugPrintln("unk :" + String(b) + "/" + String(state));
+        DebugPrintln("unk :" + String(parse_byte) + "/" + String(state));
         break;
     }
     return false;
@@ -172,7 +204,7 @@ int UbxParser::buildMessage(int msg_class, int msg_id, int payload_length, uint8
     msg_buffer[index++] = msg_id;
     msg_buffer[index++] = payload_length & 0xFF;
     msg_buffer[index++] = (payload_length >> 8) & 0xFF;
-    std::memcpy(&msg_buffer[index], &payload[0], payload_length);
+    memcpy(&msg_buffer[index], &payload[0], payload_length);
     index += payload_length;
     uint8_t chka, chkb;
     calculateChecksum(&msg_buffer[2], payload_length+4, chka, chkb);
@@ -201,4 +233,15 @@ uint8_t UbxParser::msgClass()
 uint8_t UbxParser::msgId()
 {
     return msgid_;
+}
+
+void UbxParser::printBuffer(uint8_t msg_buffer[], int msg_length, Stream *port, int output_type)
+{
+    int i = 0;
+    for (; i < msg_length-1; i++)
+    {
+        port->print(msg_buffer[i], output_type);
+        port->print(F(","));
+    }
+    port->println(msg_buffer[i]);
 }

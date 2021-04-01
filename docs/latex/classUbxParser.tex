@@ -1,0 +1,93 @@
+\hypertarget{classUbxParser}{}\doxysection{Ubx\+Parser Class Reference}
+\label{classUbxParser}\index{UbxParser@{UbxParser}}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classUbxParser_a832c6dd23ee8830484adfd4cd05242a6}{Ubx\+Parser}} ()
+\begin{DoxyCompactList}\small\item\em This is the default constructor. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classUbxParser_ada972025a3ca2b4981d183cb5d74af82}\label{classUbxParser_ada972025a3ca2b4981d183cb5d74af82}} 
+bool {\bfseries read} (Stream $\ast$port)
+\item 
+bool \mbox{\hyperlink{classUbxParser_abca0b74d277612714f9e292451750631}{parse}} (uint8\+\_\+t next\+\_\+byte)
+\begin{DoxyCompactList}\small\item\em Process the next byte. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classUbxParser_aed250a580fd6bac9b53c84d9d13b9d70}\label{classUbxParser_aed250a580fd6bac9b53c84d9d13b9d70}} 
+int {\bfseries build\+Message} (int msg\+\_\+class, int msg\+\_\+id, int payload\+\_\+length, uint8\+\_\+t payload\mbox{[}$\,$\mbox{]}, uint8\+\_\+t msg\+\_\+buffer\mbox{[}$\,$\mbox{]})
+\item 
+\mbox{\Hypertarget{classUbxParser_adca54b4ead3ae3c9a5da6c576fa3e6ee}\label{classUbxParser_adca54b4ead3ae3c9a5da6c576fa3e6ee}} 
+void {\bfseries calculate\+Checksum} (uint8\+\_\+t payload\mbox{[}$\,$\mbox{]}, int payload\+\_\+length, uint8\+\_\+t \&chka, uint8\+\_\+t \&chkb)
+\item 
+\mbox{\Hypertarget{classUbxParser_a76d10da1672335d8d9fe1e4de7db6564}\label{classUbxParser_a76d10da1672335d8d9fe1e4de7db6564}} 
+uint8\+\_\+t {\bfseries msg\+Class} ()
+\item 
+\mbox{\Hypertarget{classUbxParser_ad0ebe3298e3375289456d68c8f1e4519}\label{classUbxParser_ad0ebe3298e3375289456d68c8f1e4519}} 
+uint8\+\_\+t {\bfseries msg\+Id} ()
+\end{DoxyCompactItemize}
+\doxysubsection*{Static Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classUbxParser_a3f7abe08f40584fca497630e5a5ee9c1}\label{classUbxParser_a3f7abe08f40584fca497630e5a5ee9c1}} 
+static void {\bfseries print\+Buffer} (uint8\+\_\+t msg\+\_\+buffer\mbox{[}$\,$\mbox{]}, int msg\+\_\+length, Stream $\ast$port, int output\+\_\+type=D\+EC)
+\end{DoxyCompactItemize}
+\doxysubsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classUbxParser_ab78448425a29112fe43df1cec598eb8b}\label{classUbxParser_ab78448425a29112fe43df1cec598eb8b}} 
+uint32\+\_\+t {\bfseries unpack\+Uint32} (int offset)
+\item 
+\mbox{\Hypertarget{classUbxParser_a408aa9c3487d134eb3fd62cafe97eaa8}\label{classUbxParser_a408aa9c3487d134eb3fd62cafe97eaa8}} 
+int32\+\_\+t {\bfseries unpack\+Int32} (int offset)
+\item 
+\mbox{\Hypertarget{classUbxParser_a327f969ec8c04ec43b65f8bc1a9824f3}\label{classUbxParser_a327f969ec8c04ec43b65f8bc1a9824f3}} 
+uint16\+\_\+t {\bfseries unpack\+Uint16} (int offset)
+\item 
+\mbox{\Hypertarget{classUbxParser_a0ce86de83eab3b82bf5ed3f92ea26ac7}\label{classUbxParser_a0ce86de83eab3b82bf5ed3f92ea26ac7}} 
+int16\+\_\+t {\bfseries unpack\+Int16} (int offset)
+\item 
+\mbox{\Hypertarget{classUbxParser_a2de18d88dc5818486034d9a521f8d777}\label{classUbxParser_a2de18d88dc5818486034d9a521f8d777}} 
+uint8\+\_\+t {\bfseries unpack\+Uint8} (int offset)
+\item 
+\mbox{\Hypertarget{classUbxParser_af6e1e24c87372b8810506d66555d24ea}\label{classUbxParser_af6e1e24c87372b8810506d66555d24ea}} 
+int8\+\_\+t {\bfseries unpack\+Int8} (int offset)
+\item 
+\mbox{\Hypertarget{classUbxParser_aef7804212edd0e55d8983337e67cd034}\label{classUbxParser_aef7804212edd0e55d8983337e67cd034}} 
+int32\+\_\+t {\bfseries unpack} (int offset, int size)
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classUbxParser_a832c6dd23ee8830484adfd4cd05242a6}\label{classUbxParser_a832c6dd23ee8830484adfd4cd05242a6}} 
+\index{UbxParser@{UbxParser}!UbxParser@{UbxParser}}
+\index{UbxParser@{UbxParser}!UbxParser@{UbxParser}}
+\doxysubsubsection{\texorpdfstring{UbxParser()}{UbxParser()}}
+{\footnotesize\ttfamily Ubx\+Parser\+::\+Ubx\+Parser (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+This is the default constructor. 
+
+It constructs things. 
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classUbxParser_abca0b74d277612714f9e292451750631}\label{classUbxParser_abca0b74d277612714f9e292451750631}} 
+\index{UbxParser@{UbxParser}!parse@{parse}}
+\index{parse@{parse}!UbxParser@{UbxParser}}
+\doxysubsubsection{\texorpdfstring{parse()}{parse()}}
+{\footnotesize\ttfamily bool Ubx\+Parser\+::parse (\begin{DoxyParamCaption}\item[{uint8\+\_\+t}]{parse\+\_\+byte }\end{DoxyParamCaption})}
+
+
+
+Process the next byte. 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\texttt{ in}}  & {\em parse\+\_\+byte} & next byte in the buffer to parse \\
+\hline
+\mbox{\texttt{ out}}  & {\em result} & true if valid message received \\
+\hline
+\end{DoxyParams}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/home/ubuntu/\+Documents/\+Github/cp-\/arduino/libraries/\+Ubx\+Parser/src/\mbox{\hyperlink{UbxParser_8h}{Ubx\+Parser.\+h}}\item 
+/home/ubuntu/\+Documents/\+Github/cp-\/arduino/libraries/\+Ubx\+Parser/src/\mbox{\hyperlink{UbxParser_8cpp}{Ubx\+Parser.\+cpp}}\end{DoxyCompactItemize}

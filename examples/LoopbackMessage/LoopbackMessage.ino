@@ -41,16 +41,13 @@ void loop()
 {
   sendMessage(msg_class_, msg_id_);
   delay(10);
-  while(data_port.available())
-  {
-    if(ubx_.parse(data_port.read())) {
-      debug_port.print("Message rx'd with class ");
-      debug_port.print(ubx_.msgClass());
-      debug_port.print(F(" and ID "));
-      debug_port.print(ubx_.msgId());
-      debug_port.print(F("\n\n"));
-    }
-  }
+ if(ubx_.read(&data_port)) {
+    debug_port.print("Message rx'd with class ");
+    debug_port.print(ubx_.msgClass());
+    debug_port.print(F(" and ID "));
+    debug_port.print(ubx_.msgId());
+    debug_port.print(F("\n\n"));
+  } 
 
   msg_class_++;
   msg_id_ += 2;

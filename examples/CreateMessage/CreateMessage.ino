@@ -4,18 +4,6 @@
 
 UbxParser ubx_;
 
-void printBuffer(uint8_t msg_buffer[], int msg_length, Stream *port, int output_type=DEC)
-{
-    int i = 0;
-    for (; i < msg_length-1; i++)
-    {
-        port->print(msg_buffer[i], output_type);
-        port->print(F(","));
-    }
-    port->println(msg_buffer[i]);
-}
-
-
 void setup()
 {
   debug_port.begin(115200);
@@ -29,9 +17,9 @@ void setup()
   int msg_length = ubx_.buildMessage(msg_class, msg_id, payload_length, payload, msg_buffer);
 
   debug_port.print("Example message DEC: ");
-  printBuffer(msg_buffer, msg_length, &debug_port);
+  UbxParser::printBuffer(msg_buffer, msg_length, &debug_port);
   debug_port.print("Example message HEX: ");
-  printBuffer(msg_buffer, msg_length, &debug_port, HEX);  
+  UbxParser::printBuffer(msg_buffer, msg_length, &debug_port, HEX);  
 }
 
 void loop()
