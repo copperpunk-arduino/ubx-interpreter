@@ -1,4 +1,4 @@
-UbxParser   KEYWORD1
+UbxInterpreter   KEYWORD1
 read        KEYWORD2
 buildMessage        KEYWORD2
 calculateChecksum   KEYWORD2

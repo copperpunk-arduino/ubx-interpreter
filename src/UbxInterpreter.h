@@ -1,9 +1,9 @@
 /**
   *
-  * @file UbxParser.h 
-  * A C++ class for parsing UBX messages from Ublox GPS
+  * UbxInterpreter.h 
+  * A C++ class for reading/writing messages that conform to the U-blox UBX protocol
   * 
-  * Based on the UBX_Parser library written by Simon D. Levy
+  * Parsing logic based on the UBX_Parser library written by Simon D. Levy
   * https://github.com/simondlevy/UBX_Parser
   * 
   * 
@@ -23,24 +23,28 @@
   * along with this code.  If not, see <http://www.gnu.org/licenses/>.
   */
 
-#ifndef _UBXPARSER_H_
-#define _UBXPARSER_H_
+#ifndef _UBXINTERPRETER_H_
+#define _UBXINTERPRETER_H_
 
 #include "Arduino.h"
 
 #define START_BYTE_1 0xB5
 #define START_BYTE_2 0x62
+#define PAYLOAD_OFFSET 6			 // SB1, SB2, Class, ID, Len LSB, Len MSB
+#define PAYLOAD_LENGTH_ADDED_BYTES 8 // Additional bytes wrt to the payload: SB1, SB2, Class, Id, Len LSB, Len MSB, CK_A, CK_B
 
 const int kBufferSize = 100;
 const int kPayloadSize = 100;
 const int kMessageLengthMax = kPayloadSize - 7;
 
-class UbxParser
+class UbxInterpreter
 {
 public:
+	UbxInterpreter();
+	// ---------------- RX -------------------
 	enum ParseState
 	{
-		GOT_NONE=0,
+		GOT_NONE = 0,
 		GOT_START_BYTE1,
 		GOT_START_BYTE2,
 		GOT_CLASS,
@@ -52,36 +56,48 @@ public:
 		GOT_MESSAGE
 	};
 
-	UbxParser();
 	bool read(Stream *port);
 	ParseState parse(uint8_t next_byte);
-	int buildMessage(int msg_class, int msg_id, int payload_length, uint8_t payload[], uint8_t msg_buffer[]);
-	void calculateChecksum(uint8_t payload[], int payload_length, uint8_t &chka, uint8_t &chkb);
-	static void printBuffer(uint8_t msg_buffer[], int msg_length, Stream *port, int output_type = DEC);
-	uint8_t msgClass();
-	uint8_t msgId();
-
-protected:
 	uint32_t unpackUint32(int offset);
 	int32_t unpackInt32(int offset);
 	uint16_t unpackUint16(int offset);
 	int16_t unpackInt16(int offset);
 	uint8_t unpackUint8(int offset);
 	int8_t unpackInt8(int offset);
-	int32_t unpack(int offset, int size);
+	uint8_t msgClass();
+	uint8_t msgId();
+
+	// ---------------- TX -------------------
+	void setHeaderValues(uint8_t msg_class, uint8_t msg_id, uint16_t payload_length);
+	void prepareMessage();
+	void writeMessage(Stream *port);
+	void printWriteBuffer(Stream *port, int output_type = DEC);
+	int messageBuffer(uint8_t msg_buffer[]);
+
+	template <typename T>
+	void packValue(T value, int offset)
+	{
+		memcpy(&tx_buffer_[PAYLOAD_OFFSET + offset], &value, sizeof(value));
+	}
 
 private:
-	uint8_t read_buffer_[kBufferSize];
+	//---------- Rx ------------//
+	void addToChecksum(int b);
+	int32_t unpack(int offset, int size);
 
 	ParseState state_;
-	uint8_t msgclass_;
-	uint8_t msgid_;
-	int msglen_;
+	uint8_t rx_msg_class_;
+	uint8_t rx_msg_id_;
+	int rx_msg_len_;
 	uint8_t chka_;
 	uint8_t chkb_;
-	int count_;
 	uint8_t payload_[kPayloadSize];
+	uint16_t count_;
+	//---------- Tx ------------//
+	void calculateChecksum(uint8_t payload[], int payload_length, uint8_t &chka, uint8_t &chkb);
 
-	void addToChecksum(int b);
+	uint8_t tx_buffer_[kBufferSize];
+	uint16_t tx_payload_length_ = 0;
+	int tx_buffer_write_length_ = 0;
 };
 #endif

@@ -1,17 +1,20 @@
-#include "UbxParser.h"
+#include "UbxInterpreter.h"
 
-UbxParser::UbxParser()
+UbxInterpreter::UbxInterpreter()
 {
     state_ = GOT_NONE;
-    msgclass_ = -1;
-    msgid_ = -1;
-    msglen_ = -1;
+    rx_msg_class_ = -1;
+    rx_msg_id_ = -1;
+    rx_msg_len_ = -1;
     chka_ = 0;
     chkb_ = 0;
     count_ = 0;
+
+    tx_buffer_[0] = START_BYTE_1;
+    tx_buffer_[1] = START_BYTE_2;
 }
 
-bool UbxParser::read(Stream *port)
+bool UbxInterpreter::read(Stream *port)
 {
     while (port->available())
     {
@@ -23,7 +26,7 @@ bool UbxParser::read(Stream *port)
     return false;
 }
 
-UbxParser::ParseState UbxParser::parse(uint8_t parse_byte)
+UbxInterpreter::ParseState UbxInterpreter::parse(uint8_t parse_byte)
 {
     switch (state_)
     {
@@ -42,28 +45,27 @@ UbxParser::ParseState UbxParser::parse(uint8_t parse_byte)
         }
         else
         {
-            // DebugPrintln("bad b2");
             state_ = GOT_NONE;
         }
         break;
     case GOT_START_BYTE2:
-        msgclass_ = parse_byte;
+        rx_msg_class_ = parse_byte;
         state_ = GOT_CLASS;
         addToChecksum(parse_byte);
         break;
     case GOT_CLASS:
-        msgid_ = parse_byte;
+        rx_msg_id_ = parse_byte;
         state_ = GOT_ID;
         addToChecksum(parse_byte);
         break;
     case GOT_ID:
         state_ = GOT_LENGTH1;
-        msglen_ = parse_byte;
+        rx_msg_len_ = parse_byte;
         addToChecksum(parse_byte);
         break;
     case GOT_LENGTH1:
-        msglen_ += (parse_byte << 8);
-        if (msglen_ < kMessageLengthMax)
+        rx_msg_len_ += (parse_byte << 8);
+        if (rx_msg_len_ < kMessageLengthMax)
         {
             state_ = GOT_LENGTH2;
             count_ = 0;
@@ -72,7 +74,6 @@ UbxParser::ParseState UbxParser::parse(uint8_t parse_byte)
         else
         {
             state_ = GOT_NONE;
-            // DebugPrintln("Msg length too big");
         }
         break;
     case GOT_LENGTH2:
@@ -82,14 +83,13 @@ UbxParser::ParseState UbxParser::parse(uint8_t parse_byte)
             payload_[count_] = parse_byte;
             count_++;
 
-            if (count_ == msglen_)
+            if (count_ == rx_msg_len_)
             {
                 state_ = GOT_PAYLOAD;
             }
         }
         else
         {
-            // DebugPrintln("overrun");
             state_ = GOT_NONE;
         }
         break;
@@ -97,7 +97,6 @@ UbxParser::ParseState UbxParser::parse(uint8_t parse_byte)
         if (parse_byte == chka_)
         {
             state_ = GOT_CHKA;
-            // DebugPrintln("good chka");
         }
         else
         {
@@ -109,59 +108,53 @@ UbxParser::ParseState UbxParser::parse(uint8_t parse_byte)
         state_ = GOT_NONE;
         if (parse_byte == chkb_)
         {
-            // DebugPrintln("good msg");
             return GOT_MESSAGE;
         }
-        // else
-        // {
-        //     DebugPrintln("bad chkb. exp/rx: " + String(chkb_) + "/" + String(parse_byte));
-        // }
         break;
     default:
-        // DebugPrintln("unk :" + String(parse_byte) + "/" + String(state));
         break;
     }
     return state_;
 }
 
-void UbxParser::addToChecksum(int b)
+void UbxInterpreter::addToChecksum(int b)
 {
     chka_ = (chka_ + b) & 0xFF;
     chkb_ = (chkb_ + chka_) & 0xFF;
 }
 
-uint32_t UbxParser::unpackUint32(int offset)
+uint32_t UbxInterpreter::unpackUint32(int offset)
 {
     return (uint32_t)unpack(offset, 4);
 }
 
-int32_t UbxParser::unpackInt32(int offset)
+int32_t UbxInterpreter::unpackInt32(int offset)
 {
 
     return unpack(offset, 4);
 }
 
-uint16_t UbxParser::unpackUint16(int offset)
+uint16_t UbxInterpreter::unpackUint16(int offset)
 {
     return (uint16_t)unpack(offset, 2);
 }
 
-int16_t UbxParser::unpackInt16(int offset)
+int16_t UbxInterpreter::unpackInt16(int offset)
 {
     return (int16_t)unpack(offset, 2);
 }
 
-uint8_t UbxParser::unpackUint8(int offset)
+uint8_t UbxInterpreter::unpackUint8(int offset)
 {
     return (uint8_t)unpack(offset, 1);
 }
 
-int8_t UbxParser::unpackInt8(int offset)
+int8_t UbxInterpreter::unpackInt8(int offset)
 {
     return (int8_t)unpack(offset, 1);
 }
 
-int32_t UbxParser::unpack(int offset, int size)
+int32_t UbxInterpreter::unpack(int offset, int size)
 {
     int32_t value = 0;
 
@@ -174,26 +167,56 @@ int32_t UbxParser::unpack(int offset, int size)
     return value;
 }
 
-int UbxParser::buildMessage(int msg_class, int msg_id, int payload_length, uint8_t payload[], uint8_t msg_buffer[])
+uint8_t UbxInterpreter::msgClass()
 {
-    int index = 0;
-    msg_buffer[index++] = START_BYTE_1;
-    msg_buffer[index++] = START_BYTE_2;
-    msg_buffer[index++] = msg_class;
-    msg_buffer[index++] = msg_id;
-    msg_buffer[index++] = payload_length & 0xFF;
-    msg_buffer[index++] = (payload_length >> 8) & 0xFF;
-    memcpy(&msg_buffer[index], &payload[0], payload_length);
-    index += payload_length;
-    uint8_t chka, chkb;
-    calculateChecksum(&msg_buffer[2], payload_length+4, chka, chkb);
-    msg_buffer[index++] = chka;
-    msg_buffer[index] = chkb;
-
-    return payload_length + 8;
+    return rx_msg_class_;
 }
 
-void UbxParser::calculateChecksum(uint8_t *payload, int payload_length, uint8_t &chka, uint8_t &chkb)
+uint8_t UbxInterpreter::msgId()
+{
+    return rx_msg_id_;
+}
+
+void UbxInterpreter::setHeaderValues(uint8_t msg_class, uint8_t msg_id, uint16_t payload_length)
+{
+    tx_buffer_[2] = msg_class;
+    tx_buffer_[3] = msg_id;
+    tx_buffer_[4] = payload_length & 0xFF;
+    tx_buffer_[5] = (payload_length >> 8) & 0xFF;
+    tx_payload_length_ = payload_length;
+    tx_buffer_write_length_ = payload_length + PAYLOAD_LENGTH_ADDED_BYTES;
+}
+
+void UbxInterpreter::prepareMessage()
+{
+    uint8_t chka, chkb;
+    calculateChecksum(&tx_buffer_[2], tx_payload_length_ + 4, chka, chkb);
+    tx_buffer_[tx_payload_length_ + 6] = chka;
+    tx_buffer_[tx_payload_length_ + 7] = chkb;
+}
+
+void UbxInterpreter::writeMessage(Stream *port)
+{
+    port->write(tx_buffer_, tx_buffer_write_length_);
+}
+
+int UbxInterpreter::messageBuffer(uint8_t msg_buffer[])
+{
+    memcpy(msg_buffer, tx_buffer_, tx_buffer_write_length_);
+    return tx_buffer_write_length_;
+}
+
+void UbxInterpreter::printWriteBuffer(Stream *port, int output_type)
+{
+    int i = 0;
+    for (; i < tx_buffer_write_length_ - 1; i++)
+    {
+        port->print(tx_buffer_[i], output_type);
+        port->print(F(","));
+    }
+    port->println(tx_buffer_[i]);
+}
+void UbxInterpreter::calculateChecksum(uint8_t *payload, int payload_length, uint8_t &chka, uint8_t &chkb)
 {
     chka = 0;
     chkb = 0;
@@ -202,25 +225,4 @@ void UbxParser::calculateChecksum(uint8_t *payload, int payload_length, uint8_t 
         chka = (chka + payload[i]) & 0xFF;
         chkb = (chkb + chka) & 0xFF;
     }
-}
-
-uint8_t UbxParser::msgClass()
-{
-    return msgclass_;
-}
-
-uint8_t UbxParser::msgId()
-{
-    return msgid_;
-}
-
-void UbxParser::printBuffer(uint8_t msg_buffer[], int msg_length, Stream *port, int output_type)
-{
-    int i = 0;
-    for (; i < msg_length-1; i++)
-    {
-        port->print(msg_buffer[i], output_type);
-        port->print(F(","));
-    }
-    port->println(msg_buffer[i]);
 }
