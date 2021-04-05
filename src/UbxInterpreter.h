@@ -70,7 +70,7 @@ public:
 	// ---------------- TX -------------------
 	void setHeaderValues(uint8_t msg_class, uint8_t msg_id, uint16_t payload_length);
 	void prepareMessage();
-	void writeMessage(Stream *port);
+	int writeMessage(Stream *port);
 	void printWriteBuffer(Stream *port, int output_type = DEC);
 	int messageBuffer(uint8_t msg_buffer[]);
 

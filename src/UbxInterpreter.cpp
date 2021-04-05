@@ -195,9 +195,9 @@ void UbxInterpreter::prepareMessage()
     tx_buffer_[tx_payload_length_ + 7] = chkb;
 }
 
-void UbxInterpreter::writeMessage(Stream *port)
+int UbxInterpreter::writeMessage(Stream *port)
 {
-    port->write(tx_buffer_, tx_buffer_write_length_);
+    return (port->write(tx_buffer_, tx_buffer_write_length_));
 }
 
 int UbxInterpreter::messageBuffer(uint8_t msg_buffer[])
