@@ -100,8 +100,7 @@ UbxInterpreter::ParseState UbxInterpreter::parse(uint8_t parse_byte)
         }
         else
         {
-        state_:
-            GOT_NONE;
+            state_ = GOT_NONE;
         }
         break;
     case GOT_CHKA:
