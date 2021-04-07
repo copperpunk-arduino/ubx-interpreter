@@ -94,14 +94,7 @@ UbxInterpreter::ParseState UbxInterpreter::parse(uint8_t parse_byte)
         }
         break;
     case GOT_PAYLOAD:
-        if (parse_byte == chka_)
-        {
-            state_ = GOT_CHKA;
-        }
-        else
-        {
-            state_ = GOT_NONE;
-        }
+        state_ = (parse_byte == chka_) ? GOT_CHKA : GOT_NONE;
         break;
     case GOT_CHKA:
         state_ = GOT_NONE;
