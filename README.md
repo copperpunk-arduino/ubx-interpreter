@@ -1,4 +1,4 @@
-# UbxParser
+# UbxInterpreter
 This a generic UBX interpreter library. It expects the creation of another, more specific, class in order to process any messages that are received. See the [ubx-gps](https://github.com/copperpunk-arduino/ubx-gps) repository for an example of this.
 
 > All examples are written to work with [Adafruit Feather M0](https://www.adafruit.com/product/2772) boards. That doesn't mean they don't work with other boards, but you might need to change some of the hardware definitions.
