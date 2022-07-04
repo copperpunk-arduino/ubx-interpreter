@@ -2,16 +2,16 @@
 
 UbxInterpreter::UbxInterpreter()
 {
-    state_ = GOT_NONE;
-    rx_msg_class_ = -1;
-    rx_msg_id_ = -1;
-    rx_msg_len_ = -1;
-    chka_ = 0;
-    chkb_ = 0;
-    count_ = 0;
+    _state = GOT_NONE;
+    _rx_msg_class = -1;
+    _rx_msg_id = -1;
+    _rx_payload_length = -1;
+    _chka = 0;
+    _chkb = 0;
+    _count = 0;
 
-    tx_buffer_[0] = START_BYTE_1;
-    tx_buffer_[1] = START_BYTE_2;
+    _tx_buffer[0] = START_BYTE_1;
+    _tx_buffer[1] = START_BYTE_2;
 }
 
 bool UbxInterpreter::read(Stream *port)
@@ -28,77 +28,77 @@ bool UbxInterpreter::read(Stream *port)
 
 UbxInterpreter::ParseState UbxInterpreter::parse(uint8_t parse_byte)
 {
-    switch (state_)
+    switch (_state)
     {
     case GOT_NONE:
         if (parse_byte == START_BYTE_1)
         {
-            state_ = GOT_START_BYTE1;
+            _state = GOT_START_BYTE1;
         }
         break;
     case GOT_START_BYTE1:
         if (parse_byte == START_BYTE_2)
         {
-            state_ = GOT_START_BYTE2;
-            chka_ = 0;
-            chkb_ = 0;
+            _state = GOT_START_BYTE2;
+            _chka = 0;
+            _chkb = 0;
         }
         else
         {
-            state_ = GOT_NONE;
+            _state = GOT_NONE;
         }
         break;
     case GOT_START_BYTE2:
-        rx_msg_class_ = parse_byte;
-        state_ = GOT_CLASS;
+        _rx_msg_class = parse_byte;
+        _state = GOT_CLASS;
         addToChecksum(parse_byte);
         break;
     case GOT_CLASS:
-        rx_msg_id_ = parse_byte;
-        state_ = GOT_ID;
+        _rx_msg_id = parse_byte;
+        _state = GOT_ID;
         addToChecksum(parse_byte);
         break;
     case GOT_ID:
-        state_ = GOT_LENGTH1;
-        rx_msg_len_ = parse_byte;
+        _state = GOT_LENGTH1;
+        _rx_payload_length = parse_byte;
         addToChecksum(parse_byte);
         break;
     case GOT_LENGTH1:
-        rx_msg_len_ += (parse_byte << 8);
-        if (rx_msg_len_ < kMessageLengthMax)
+        _rx_payload_length += (parse_byte << 8);
+        if (_rx_payload_length < kMessageLengthMax)
         {
-            state_ = GOT_LENGTH2;
-            count_ = 0;
+            _state = _rx_payload_length > 0 ? GOT_LENGTH2 : GOT_PAYLOAD;
+            _count = 0;
             addToChecksum(parse_byte);
         }
         else
         {
-            state_ = GOT_NONE;
+            _state = GOT_NONE;
         }
         break;
     case GOT_LENGTH2:
-        if (count_ < kPayloadSize)
+        if (_count < kPayloadSize)
         {
             addToChecksum(parse_byte);
-            payload_[count_] = parse_byte;
-            count_++;
+            _payload[_count] = parse_byte;
+            ++_count;
 
-            if (count_ == rx_msg_len_)
+            if (_count == _rx_payload_length)
             {
-                state_ = GOT_PAYLOAD;
+                _state = GOT_PAYLOAD;
             }
         }
         else
         {
-            state_ = GOT_NONE;
+            _state = GOT_NONE;
         }
         break;
     case GOT_PAYLOAD:
-        state_ = (parse_byte == chka_) ? GOT_CHKA : GOT_NONE;
+        _state = (parse_byte == _chka) ? GOT_CHKA : GOT_NONE;
         break;
     case GOT_CHKA:
-        state_ = GOT_NONE;
-        if (parse_byte == chkb_)
+        _state = GOT_NONE;
+        if (parse_byte == _chkb)
         {
             return GOT_MESSAGE;
         }
@@ -106,13 +106,16 @@ UbxInterpreter::ParseState UbxInterpreter::parse(uint8_t parse_byte)
     default:
         break;
     }
-    return state_;
+    // Serial.print(parse_byte);
+    // Serial.print(F("/"));
+    // Serial.println(state_);
+    return _state;
 }
 
 void UbxInterpreter::addToChecksum(int b)
 {
-    chka_ = (chka_ + b) & 0xFF;
-    chkb_ = (chkb_ + chka_) & 0xFF;
+    _chka = (_chka + b) & 0xFF;
+    _chkb = (_chkb + _chka) & 0xFF;
 }
 
 uint32_t UbxInterpreter::unpackUint32(int offset)
@@ -153,60 +156,64 @@ int32_t UbxInterpreter::unpack(int offset, int size)
     for (int k = 0; k < size; ++k)
     {
         value <<= 8;
-        value |= (0xFF & payload_[offset + (size - 1) - k]);
+        value |= (0xFF & _payload[offset + (size - 1) - k]);
     }
 
     return value;
 }
 
-uint8_t UbxInterpreter::msgClass()
-{
-    return rx_msg_class_;
-}
-
-uint8_t UbxInterpreter::msgId()
-{
-    return rx_msg_id_;
-}
-
 void UbxInterpreter::setHeaderValues(uint8_t msg_class, uint8_t msg_id, uint16_t payload_length)
 {
-    tx_buffer_[2] = msg_class;
-    tx_buffer_[3] = msg_id;
-    tx_buffer_[4] = payload_length & 0xFF;
-    tx_buffer_[5] = (payload_length >> 8) & 0xFF;
-    tx_payload_length_ = payload_length;
-    tx_buffer_write_length_ = payload_length + PAYLOAD_LENGTH_ADDED_BYTES;
+    _tx_buffer[2] = msg_class;
+    _tx_buffer[3] = msg_id;
+    _tx_buffer[4] = payload_length & 0xFF;
+    _tx_buffer[5] = (payload_length >> 8) & 0xFF;
+    _tx_payload_length = payload_length;
+    _tx_buffer_write_length = payload_length + PAYLOAD_LENGTH_ADDED_BYTES;
 }
 
 void UbxInterpreter::prepareMessage()
 {
     uint8_t chka, chkb;
-    calculateChecksum(&tx_buffer_[2], tx_payload_length_ + 4, chka, chkb);
-    tx_buffer_[tx_payload_length_ + 6] = chka;
-    tx_buffer_[tx_payload_length_ + 7] = chkb;
+    calculateChecksum(&_tx_buffer[2], _tx_payload_length + 4, chka, chkb);
+    _tx_buffer[_tx_payload_length + 6] = chka;
+    _tx_buffer[_tx_payload_length + 7] = chkb;
 }
 
 int UbxInterpreter::writeMessage(Stream *port)
 {
-    return (port->write(tx_buffer_, tx_buffer_write_length_));
+    return (port->write(_tx_buffer, _tx_buffer_write_length));
+}
+
+int UbxInterpreter::forwardLastMessageReceived(Stream *port)
+{
+    _tx_buffer[2] = _rx_msg_class;
+    _tx_buffer[3] = _rx_msg_id;
+    _tx_buffer[4] = _rx_payload_length & 0xFF;
+    _tx_buffer[5] = (_rx_payload_length >> 8) & 0xFF;
+    memcpy(&_tx_buffer[6], _payload, _rx_payload_length);
+    _tx_payload_length = _rx_payload_length;
+    _tx_buffer[_tx_payload_length + 6] = _chka;
+    _tx_buffer[_tx_payload_length + 7] = _chkb;
+    _tx_buffer_write_length = _tx_payload_length + PAYLOAD_LENGTH_ADDED_BYTES;
+    return (port->write(_tx_buffer, _tx_buffer_write_length));
 }
 
 int UbxInterpreter::messageBuffer(uint8_t msg_buffer[])
 {
-    memcpy(msg_buffer, tx_buffer_, tx_buffer_write_length_);
-    return tx_buffer_write_length_;
+    memcpy(msg_buffer, _tx_buffer, _tx_buffer_write_length);
+    return _tx_buffer_write_length;
 }
 
 void UbxInterpreter::printWriteBuffer(Stream *port, int output_type)
 {
     int i = 0;
-    for (; i < tx_buffer_write_length_ - 1; i++)
+    for (; i < _tx_buffer_write_length - 1; ++i)
     {
-        port->print(tx_buffer_[i], output_type);
+        port->print(_tx_buffer[i], output_type);
         port->print(F(","));
     }
-    port->println(tx_buffer_[i]);
+    port->println(_tx_buffer[i]);
 }
 void UbxInterpreter::calculateChecksum(uint8_t *payload, int payload_length, uint8_t &chka, uint8_t &chkb)
 {

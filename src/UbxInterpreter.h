@@ -64,20 +64,21 @@ public:
 	int16_t unpackInt16(int offset);
 	uint8_t unpackUint8(int offset);
 	int8_t unpackInt8(int offset);
-	uint8_t msgClass();
-	uint8_t msgId();
+	uint8_t msgClass() { return _rx_msg_class; };
+	uint8_t msgId() { return _rx_msg_id; };
 
 	// ---------------- TX -------------------
 	void setHeaderValues(uint8_t msg_class, uint8_t msg_id, uint16_t payload_length);
 	void prepareMessage();
 	int writeMessage(Stream *port);
+	int forwardLastMessageReceived(Stream *port);
 	void printWriteBuffer(Stream *port, int output_type = DEC);
 	int messageBuffer(uint8_t msg_buffer[]);
 
 	template <typename T>
 	void packValue(T value, int offset)
 	{
-		memcpy(&tx_buffer_[PAYLOAD_OFFSET + offset], &value, sizeof(value));
+		memcpy(&_tx_buffer[PAYLOAD_OFFSET + offset], &value, sizeof(value));
 	}
 
 private:
@@ -85,19 +86,19 @@ private:
 	void addToChecksum(int b);
 	int32_t unpack(int offset, int size);
 
-	ParseState state_;
-	uint8_t rx_msg_class_;
-	uint8_t rx_msg_id_;
-	int rx_msg_len_;
-	uint8_t chka_;
-	uint8_t chkb_;
-	uint8_t payload_[kPayloadSize];
-	uint16_t count_;
+	ParseState _state;
+	uint8_t _rx_msg_class;
+	uint8_t _rx_msg_id;
+	int _rx_payload_length;
+	uint8_t _chka;
+	uint8_t _chkb;
+	uint8_t _payload[kPayloadSize];
+	uint16_t _count;
 	//---------- Tx ------------//
 	void calculateChecksum(uint8_t payload[], int payload_length, uint8_t &chka, uint8_t &chkb);
 
-	uint8_t tx_buffer_[kBufferSize];
-	uint16_t tx_payload_length_ = 0;
-	int tx_buffer_write_length_ = 0;
+	uint8_t _tx_buffer[kBufferSize];
+	uint16_t _tx_payload_length = 0;
+	int _tx_buffer_write_length = 0;
 };
 #endif
